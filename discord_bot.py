@@ -103,7 +103,7 @@ async def main():
     # aiohttp 웹서버와 디스코드 봇을 동시에 실행
     await asyncio.gather(
         start_web_server(),
-        client.start(TOKEN)  # 또는 client.run()은 안됨 (blocking)
+        bot.start(TOKEN)  # 또는 client.run()은 안됨 (blocking)
     )
 
 if __name__ == "__main__":
