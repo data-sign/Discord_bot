@@ -6,7 +6,7 @@ from discord.ext import commands
 
 # 환경변수에서 디스코드 토큰 가져오기
 TOKEN = os.getenv("DISCORD_TOKEN")
-CHANNEL_ID = os.getenv("CHANNEL_ID")
+CHANNEL_ID = int(os.getenv("CHANNEL_ID"))
 
 intents = discord.Intents.default()
 intents.message_content = True  # message.content 읽기 위해 필요
