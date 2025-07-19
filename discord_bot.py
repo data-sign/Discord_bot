@@ -8,7 +8,12 @@ from aiohttp import web
 ## 0. 환경변수 설정
 # 환경변수에서 디스코드 토큰 가져오기
 TOKEN = os.getenv("DISCORD_TOKEN")
-CHANNEL_ID = int(os.getenv("CHANNEL_ID"))
+CHANNEL_ID = os.getenv("CHANNEL_ID")
+
+if not TOKEN or not CHANNEL_ID:
+    raise ValueError("DISCORD_TOKEN과 CHANNEL_ID 환경변수를 모두 설정하세요.")
+
+CHANNEL_ID = int(CHANNEL_ID)
 
 ## 1. Discord Bot 정의
 intents = discord.Intents.default()
@@ -22,6 +27,11 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 @bot.event
 async def on_ready():
     print(f"🤖 Logged in as {bot.user}")
+    try:
+        synced = await bot.tree.sync()
+        print(f"슬래시 커맨드 {len(synced)}개 동기화 완료")
+    except Exception as e:
+        print(e)
 
 ## 2. aiohttp 헬스체크 서버 정의
 async def health_check(request):
@@ -52,7 +62,7 @@ def extract_section(text, start_heading, end_heading):
             collected.append(line)
     return "\n".join(collected).strip()
 
-class AuthModal(ui.Modal, title="✍️ 인증 내용 작성"):
+class ScrumModal(ui.Modal, title="✍️ 인증 내용 작성"):
 
     def __init__(self, yesterday: str, today: str):
         super().__init__()
@@ -81,8 +91,8 @@ class AuthModal(ui.Modal, title="✍️ 인증 내용 작성"):
         await interaction.response.send_message("✅ 인증이 등록되었습니다!", ephemeral=True)
 
 # 슬래시 명령으로 Modal 실행
-@bot.tree.command(name="copy_auth", description="이전 인증에서 '오늘 계획'을 복사해 새 인증을 작성합니다.")
-async def copy_auth(interaction: Interaction):
+@bot.tree.command(name="인증복사", description="이전 인증에서 '오늘 계획'을 복사해 새 인증을 작성합니다.")
+async def copy_scrum(interaction: Interaction):
     # 최근 메시지에서 오늘계획 추출
     channel = bot.get_channel(CHANNEL_ID)
     user_id = interaction.user.id
@@ -95,7 +105,7 @@ async def copy_auth(interaction: Interaction):
 
     today_section = extract_section(latest_msg.content, "🫣 오늘 무엇을 할 계획인가요?", "😉 하고 싶은 말") if latest_msg else ""
 
-    modal = AuthModal(yesterday=today_section or "(없음)", today="")
+    modal = ScrumModal(yesterday=today_section or "(없음)", today="")
     await interaction.response.send_modal(modal)
 
 ## 4. Discord bot + aiohttp 병렬 실행
