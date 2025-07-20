@@ -44,25 +44,20 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 async def on_ready():
     logger.info(f"🤖 Logged in as {bot.user}")
     logger.info(f"Connected to {len(bot.guilds)} guilds")
-
+    try:
+        if GUILD_ID:
+            guild = discord.Object(id=GUILD_ID)
+            synced = await bot.tree.sync(guild=guild)
+            logger.info(f"길드 동기화 완료: {len(synced)}개")
+        else:
+            synced = await bot.tree.sync()
+            logger.info(f"전역 동기화 완료: {len(synced)}개")
+    except Exception as e:
+        logger.error(f"슬래시 커맨드 동기화 실패: {e}")
 # 디스코드봇 에러 핸들러
 @bot.event
 async def on_error(event, *args, **kwargs):
     logger.error(f"Discord bot error in {event}: {args}")
-
-async def setup_commands():
-    """명령어 설정 및 동기화"""
-    await bot.wait_until_ready()  # 봇이 완전히 준비될 때까지 대기
-    
-    logger.info(f"설정된 명령어 개수: {len(bot.tree.get_commands())}")
-    
-    if GUILD_ID:
-        guild = discord.Object(id=GUILD_ID)
-        synced = await bot.tree.sync(guild=guild)
-        logger.info(f"길드 동기화 완료: {len(synced)}개")
-    else:
-        synced = await bot.tree.sync()
-        logger.info(f"전역 동기화 완료: {len(synced)}개")
 
 
 ## 2. aiohttp 헬스체크 서버 정의
@@ -166,7 +161,6 @@ async def main():
         await asyncio.gather(
             start_web_server(),
             bot.start(TOKEN),
-            setup_commands(),
             return_exceptions=True
         )
     except Exception as e:
