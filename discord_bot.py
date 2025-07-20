@@ -6,6 +6,7 @@ import asyncio
 from aiohttp import web
 import sys
 import logging
+import aiohttp
 
 # 로깅 설정 (서버 로그에 출력되도록)
 logging.basicConfig(
@@ -39,6 +40,17 @@ intents.messages = True
 
 # 봇 클라이언트 생성
 bot = commands.Bot(command_prefix="!", intents=intents)
+
+
+async def ping_self():
+    await bot.wait_until_ready()
+    while not bot.is_closed():
+        try:
+            async with aiohttp.ClientSession() as s:
+                await s.get(os.environ['KOYEB_URL'])
+        except Exception as e:
+            logger.warning(f"Self-ping failed: {e}")
+        await asyncio.sleep(180)  # 3분마다 ping
 
 @bot.event
 async def on_ready():
@@ -173,6 +185,7 @@ async def main():
         await asyncio.gather(
             start_web_server(),
             bot.start(TOKEN),
+            ping_self(),
             return_exceptions=True
         )
     except Exception as e:
