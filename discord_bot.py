@@ -76,7 +76,7 @@ async def start_web_server():
 
     site = web.TCPSite(runner, '0.0.0.0', 8000)
     await site.start()
-    logger.info(f"🌐 Health check server running on port {port}")
+    logger.info(f"🌐 Health check server running on port 8000")
 
 ## 3. 인증 모달 생성
 # 섹션 추출 함수: 시작 이모지~다음 섹션 시작 전까지 텍스트 추출
