@@ -41,16 +41,20 @@ intents.messages = True
 # 봇 클라이언트 생성
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-
 async def ping_self():
-    await bot.wait_until_ready()
-    while not bot.is_closed():
-        try:
-            async with aiohttp.ClientSession() as s:
-                await s.get(os.environ['KOYEB_URL'])
-        except Exception as e:
-            logger.warning(f"Self-ping failed: {type(e).__name__}: {e}")
-        await asyncio.sleep(180)  # 3분마다 ping
+    url = os.environ.get("KOYEB_URL", "").strip()
+
+    if not url:
+        logger.warning("❌ KOYEB_URL 환경변수가 비어 있습니다.")
+        return
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, timeout=2) as res:
+                logger.info(f"✅ Self-ping 성공: {res.status} (URL: {url})")
+    except Exception as e:
+        logger.warning(f"❌ Self-ping 실패: {type(e).__name__}: {e} (URL: {url})")
+
 
 @bot.event
 async def on_ready():
