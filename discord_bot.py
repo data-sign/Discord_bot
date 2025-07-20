@@ -147,7 +147,12 @@ async def copy_scrum(interaction: Interaction):
             return
 
         async for msg in channel.history(limit=200):
+            # 1. 봇이 보낸 메시지 중 태그가 포함된 것
             if msg.author.bot and f"<@{user_id}>" in msg.content:
+                latest_msg = msg
+                break
+            # 2. 유저가 직접 보낸 메시지
+            elif msg.author.id == user_id:
                 latest_msg = msg
                 break
 
