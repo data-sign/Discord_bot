@@ -49,7 +49,7 @@ async def ping_self():
             async with aiohttp.ClientSession() as s:
                 await s.get(os.environ['KOYEB_URL'])
         except Exception as e:
-            logger.warning(f"Self-ping failed: {e}")
+            logger.warning(f"Self-ping failed: {type(e).__name__}: {e}")
         await asyncio.sleep(180)  # 3분마다 ping
 
 @bot.event
