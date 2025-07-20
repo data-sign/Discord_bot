@@ -141,6 +141,10 @@ async def copy_scrum(interaction: Interaction):
         user_id = interaction.user.id
         latest_msg = None
 
+        if interaction.channel_id != CHANNEL_ID:
+            await interaction.response.send_message("이 채널에서는 사용할 수 없는 명령어입니다.", ephemeral=True)
+            return
+
         async for msg in channel.history(limit=200):
             if msg.author.bot and f"<@{user_id}>" in msg.content:
                 latest_msg = msg
