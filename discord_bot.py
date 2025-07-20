@@ -133,7 +133,7 @@ class ScrumModal(ui.Modal, title="✍️ 인증 내용 작성"):
             await interaction.response.send_message("❌ 인증 등록 중 오류가 발생했습니다.", ephemeral=True)
 
 # 슬래시 명령으로 Modal 실행
-@bot.tree.command(name="인증복사", description="이전 인증에서 '오늘 계획'을 복사해 새 인증을 작성합니다.")
+@bot.tree.command(name="인증복사", description="이전 인증에서 '오늘 계획'을 복사해 새 인증을 작성합니다.", guild=discord.Object(id=GUILD_ID) if GUILD_ID else None)
 async def copy_scrum(interaction: Interaction):
     try: 
         # 최근 메시지에서 오늘계획 추출
