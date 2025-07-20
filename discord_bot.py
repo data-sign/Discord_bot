@@ -49,10 +49,11 @@ async def on_ready():
             guild = discord.Object(id=GUILD_ID)
             synced = await bot.tree.sync(guild=guild)
             logger.info(f"길드 동기화 완료: {len(synced)}개")
-            logger.info(f"등록된 커맨드: {[cmd.name for cmd in bot.tree.get_commands()]}")
+            logger.info(f"등록된 커맨드: {[cmd.name for cmd in bot.tree.get_commands(guild=guild)]}")
         else:
             synced = await bot.tree.sync()
             logger.info(f"전역 동기화 완료: {len(synced)}개")
+            logger.info(f"등록된 커맨드: {[cmd.name for cmd in bot.tree.get_commands()]}")
     except Exception as e:
         logger.error(f"슬래시 커맨드 동기화 실패: {e}")
 # 디스코드봇 에러 핸들러
