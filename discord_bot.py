@@ -157,7 +157,8 @@ async def copy_scrum(interaction: Interaction):
         await interaction.response.send_modal(modal)
     except Exception as e:
         logger.error(f"Error in copy_scrum command: {e}")
-        await interaction.response.send_message("❌ 명령어 실행 중 오류가 발생했습니다.", ephemeral=True)
+        if not interaction.response.is_done():
+            await interaction.response.send_message("❌ 명령어 실행 중 오류가 발생했습니다.", ephemeral=True)
 
 ## 4. Discord bot + aiohttp 병렬 실행
 async def main():
