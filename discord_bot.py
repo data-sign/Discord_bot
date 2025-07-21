@@ -166,7 +166,7 @@ class ScrumEditModal(ui.Modal, title="✏️ 인증 내용 수정"):
 
         self.yesterday_input = ui.TextInput(label="🧐 어제 무엇을 했나요?", style=discord.TextStyle.paragraph, default=yesterday)
         self.today_input = ui.TextInput(label="🫣 오늘 무엇을 할 계획인가요?", style=discord.TextStyle.paragraph, default=today)
-        self.comment_input = ui.TextInput(label="😉 하고 싶은 말", style=discord.TextStyle.paragraph, default=comment)
+        self.comment_input = ui.TextInput(label="😉 하고 싶은 말 (힘든 점, 좋은 일, 기대하는 모습 등)", style=discord.TextStyle.paragraph, default=comment)
 
         self.add_item(self.yesterday_input)
         self.add_item(self.today_input)
