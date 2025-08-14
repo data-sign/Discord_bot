@@ -80,11 +80,11 @@ async def on_ready():
             logger.info(f"길드 동기화 완료: {len(synced)}개")
             logger.info(f"등록된 커맨드: {[cmd.name for cmd in bot.tree.get_commands(guild=guild_ref)]}")
 
-            # 준비 완료 메시지 전송
-            channel = bot.get_channel(CHANNEL_ID)
-            guild_obj = bot.get_guild(GUILD_ID)
-            guild_name = guild_obj.name if guild_obj else str(GUILD_ID)
-            await channel.send(f"🤖 봇이 준비되었습니다! 길드: {guild_name}, 채널: {channel.name}")
+            # TODO: 준비 완료 메시지 전송
+            # channel = bot.get_channel(CHANNEL_ID)
+            # guild_obj = bot.get_guild(GUILD_ID)
+            # guild_name = guild_obj.name if guild_obj else str(GUILD_ID)
+            # await channel.send(f"🤖 봇이 준비되었습니다! 길드: {guild_name}, 채널: {channel.name}")
         else:
             # 전역 동기화
             synced = await bot.tree.sync()
