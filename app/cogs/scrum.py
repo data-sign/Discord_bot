@@ -1,10 +1,9 @@
-import os
-import logging
 import discord
 from discord import app_commands, ui, Interaction
 from discord.ext import commands
 
-logger = logging.getLogger(__name__)
+from app.database.scrum_entries import create_scrum_entry, update_scrum_entry
+from app.log import logger
 
 
 def extract_section(text: str, start_heading: str, end_heading: str) -> str:
@@ -70,12 +69,30 @@ class ScrumModal(ui.Modal, title="✍️ 인증 내용 작성"):
                 f"😉 하고 싶은 말\n{self.comment_input.value}"
             )
 
-            await check_channel.send(
+            # 디스코드에 메시지 전송
+            sent_message = await check_channel.send(
                 f"<@{interaction.user.id}>님의 인증입니다\n\n{content}"
             )
-            await interaction.response.send_message(
-                "✅ 인증이 등록되었습니다!", ephemeral=True
-            )
+            
+            # DB에 저장
+            try:
+                await create_scrum_entry(
+                    user_id=str(interaction.user.id),
+                    yesterday_work=self.yesterday_input.value,
+                    today_plan=self.today_input.value,
+                    comment=self.comment_input.value,
+                    message_id=str(sent_message.id),
+                    channel_id=str(self.channel_id)
+                )
+                # 모달 응답 보내기
+                await interaction.response.send_message(
+                    "✅ 인증이 등록되었습니다!", ephemeral=True
+                )
+            except Exception as e:
+                logger.error(f"DB 저장 중 오류 발생: {e}")
+                await interaction.followup.send(
+                    "⚠️ 데이터베이스 저장 중 오류가 발생했습니다.", ephemeral=True
+                )
 
         except Exception as e:
             logger.error(f"Error in scrum modal submit: {e}")
@@ -121,10 +138,25 @@ class ScrumEditModal(ui.Modal, title="✏️ 인증 내용 수정"):
             # 기존 메시지 수정
             new_content = f"<@{interaction.user.id}>님의 인증입니다 (수정됨)\n\n{content}"
             await self.message_to_edit.edit(content=new_content)
-            await interaction.response.send_message(
-                "✅ 인증이 수정되었습니다!", ephemeral=True
-            )
 
+            # DB 업데이트
+            try:
+                await update_scrum_entry(
+                    message_id=str(self.message_to_edit.id),
+                    yesterday_work=self.yesterday_input.value,
+                    today_plan=self.today_input.value,
+                    comment=self.comment_input.value
+                )
+                # 모달 응답 보내기
+                await interaction.response.send_message(
+                    "✅ 인증이 수정되었습니다!", ephemeral=True
+                )
+            except Exception as e:
+                logger.error(f"DB 업데이트 중 오류 발생: {e}")
+                await interaction.followup.send(
+                    "⚠️ 데이터베이스 업데이트 중 오류가 발생했습니다.", ephemeral=True
+                )
+            
         except Exception as e:
             logger.error(f"Error in scrum edit modal submit: {e}")
             if not interaction.response.is_done():
