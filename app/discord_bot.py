@@ -1,34 +1,17 @@
 import os
-import discord
-from discord.ext import commands
-import asyncio
-from aiohttp import web
 import sys
-import logging
 import aiohttp
-
+import asyncio
+import discord
+from aiohttp import web
+from discord.ext import commands
 from dotenv import load_dotenv
+
 load_dotenv()
 
-# 로깅 설정 (서버 로그에 출력되도록)
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(sys.stdout)
-    ]
-)
-logger = logging.getLogger(__name__)
+from app.config import ADMIN_CHANNEL_ID, CHANNEL_ID, DISCORD_TOKEN, GUILD_ID, logger
 
-## 0. 환경변수 설정
-# 환경변수에서 디스코드 토큰 가져오기
-DISCORD_TOKEN = os.getenv("DISCORD_TOKEN", "")
-CHANNEL_ID = int(os.getenv("CHANNEL_ID", 0))
-GUILD_ID = int(os.getenv("GUILD_ID", 0))
 
-if not DISCORD_TOKEN or not CHANNEL_ID:
-    logger.error("DISCORD_TOKEN과 CHANNEL_ID 환경변수를 모두 설정하세요.")
-    raise ValueError("DISCORD_TOKEN과 CHANNEL_ID 환경변수를 모두 설정하세요.")
 
 
 ## 1. Discord Bot 정의
@@ -80,11 +63,11 @@ async def on_ready():
             logger.info(f"길드 동기화 완료: {len(synced)}개")
             logger.info(f"등록된 커맨드: {[cmd.name for cmd in bot.tree.get_commands(guild=guild_ref)]}")
 
-            # TODO: 준비 완료 메시지 전송
-            # channel = bot.get_channel(CHANNEL_ID)
-            # guild_obj = bot.get_guild(GUILD_ID)
-            # guild_name = guild_obj.name if guild_obj else str(GUILD_ID)
-            # await channel.send(f"🤖 봇이 준비되었습니다! 길드: {guild_name}, 채널: {channel.name}")
+            # 준비 완료 메시지 전송
+            channel = bot.get_channel(ADMIN_CHANNEL_ID)
+            guild_obj = bot.get_guild(GUILD_ID)
+            guild_name = guild_obj.name if guild_obj else str(GUILD_ID)
+            await channel.send(f"🤖 봇이 준비되었습니다! 길드: {guild_name}, 채널: {channel.name}")
         else:
             # 전역 동기화
             synced = await bot.tree.sync()
@@ -120,7 +103,7 @@ async def main():
     logger.info("Starting Discord bot and web server...")
     try:
         # 확장 로드 (도메인 별로 추가)
-        await bot.load_extension("cogs.scrum")
+        await bot.load_extension("app.cogs.scrum")
         
         # aiohttp 웹서버와 디스코드 봇을 동시에 실행
         await asyncio.gather(

@@ -12,4 +12,4 @@ COPY . .
 RUN echo "✅ Installed packages:" && pip list
 
 # 디스코드 봇 실행
-CMD ["python", "discord_bot.py"]
+CMD ["python", "run.py"]
