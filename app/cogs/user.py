@@ -84,14 +84,6 @@ class RoutineSetModal(ui.Modal, title="🎯 루틴 설정"):
             )
 
 
-# 줄바꿈을 처리하는 함수
-def format_goal_text(text: str) -> str:
-    if not text or text == '없음':
-        return text
-    # 줄바꿈을 들여쓰기로 변환
-    return text.replace('\n-', '-')
-
-
 class UserCog(commands.Cog, name="User"):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
