@@ -12,14 +12,17 @@ async def upsert_user_profile(
     try:
         data = {
             "user_id": str(user_id),
-            "monthly_goal": monthly_goal,
-            "weekly_goal": weekly_goal,
-            "routine": routine,
             "updated_at": datetime.now(timezone.utc).isoformat(),
         }
+        if monthly_goal is not None:
+            data["monthly_goal"] = monthly_goal
+        if weekly_goal is not None:
+            data["weekly_goal"] = weekly_goal
+        if routine is not None:
+            data["routine"] = routine
         
-        result = await supabase.table("user_profiles").upsert(data, on_conflict="user_id").maybe_single().execute()
-        return result.data if result else {}
+        result = await supabase.table("user_profiles").upsert(data, on_conflict="user_id").execute()
+        return result.data[0] if result.data else {}
     
     except Exception as e:
         raise Exception(f"유저 프로필 생성 또는 업데이트 중 오류 발생: {str(e)}")
