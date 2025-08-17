@@ -353,6 +353,9 @@ class ScrumCog(commands.Cog, name="Scrum"):
                 latest_msg.content, "😉 하고 싶은 말", ""
             )
 
+            # 사용자 프로필 조회
+            user_profile = await get_user_profile(user_id)
+
             modal = ScrumEditModal(
                 message_to_edit=latest_msg,
                 yesterday=yesterday_section or "",
