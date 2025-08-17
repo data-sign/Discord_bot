@@ -2,7 +2,7 @@ import discord
 from discord import app_commands, ui, Interaction
 from discord.ext import commands
 
-from app.database.scrum_entries import create_scrum_entry, update_scrum_entry
+from app.repositories.scrum_entries import create_scrum_entry, update_scrum_entry
 from app.log import logger
 
 
