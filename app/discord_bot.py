@@ -67,7 +67,7 @@ async def on_ready():
             channel = bot.get_channel(ADMIN_CHANNEL_ID)
             guild_obj = bot.get_guild(GUILD_ID)
             guild_name = guild_obj.name if guild_obj else str(GUILD_ID)
-            await channel.send(f"🤖 봇이 준비되었습니다! 길드: {guild_name}, 채널: {channel.name}")
+            await channel.send(f"🤖 봇이 준비되었습니다! 길드: {guild_name} {bot.user.name} 봇 준비 완료")
         else:
             # 전역 동기화
             synced = await bot.tree.sync()
