@@ -106,7 +106,7 @@ async def main():
         await bot.load_extension("app.cogs.scrum")
 
         # TODO: 추후 유저 커맨드를 적용할 때 주석 해제해주세요.
-        # await bot.load_extension("app.cogs.user") 
+        await bot.load_extension("app.cogs.user") 
         
         # aiohttp 웹서버와 디스코드 봇을 동시에 실행
         await asyncio.gather(

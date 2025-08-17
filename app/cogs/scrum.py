@@ -1,8 +1,10 @@
 import discord
 from discord import app_commands, ui, Interaction
 from discord.ext import commands
+import asyncio
 
 from app.repositories.scrum_entries import create_scrum_entry, update_scrum_entry
+from app.repositories.user_profiles import get_user_profile
 from app.log import logger
 
 
@@ -23,11 +25,36 @@ def extract_section(text: str, start_heading: str, end_heading: str) -> str:
             collected.append(line)
     return "\n".join(collected).strip()
 
+class StartScrumButton(ui.View):
+    def __init__(self, channel_id: int, user_id: int, yesterday: str, today: str):
+        super().__init__(timeout=300)  # 5분 타임아웃
+        self.channel_id = channel_id
+        self.user_id = user_id
+        self.yesterday = yesterday
+        self.today = today
+
+    @ui.button(label="인증 작성 시작", style=discord.ButtonStyle.primary, emoji="✍️")
+    async def start_scrum(self, interaction: Interaction, button: ui.Button):
+        try:
+            modal = ScrumModal(
+                channel_id=self.channel_id,
+                user_id=self.user_id,
+                yesterday=self.yesterday,
+                today=self.today
+            )
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            logger.error(f"Error in start scrum button: {e}")
+            await interaction.response.send_message(
+                "❌ 모달을 열 수 없습니다.", ephemeral=True
+            )
 
 class ScrumModal(ui.Modal, title="✍️ 인증 내용 작성"):
-    def __init__(self, channel_id: int, yesterday: str, today: str):
+    def __init__(self, channel_id: int, user_id: int, yesterday: str, today: str):
         super().__init__()
         self.channel_id = channel_id
+        self.user_id = user_id
+
 
         self.yesterday_input: ui.TextInput = ui.TextInput(
             label="🧐 어제 무엇을 했나요?",
@@ -51,6 +78,7 @@ class ScrumModal(ui.Modal, title="✍️ 인증 내용 작성"):
 
     async def on_submit(self, interaction: Interaction):
         try:
+
             check_channel = interaction.client.get_channel(self.channel_id)
             if not check_channel:
                 await interaction.response.send_message(
@@ -66,7 +94,7 @@ class ScrumModal(ui.Modal, title="✍️ 인증 내용 작성"):
             content = (
                 f"🧐 어제 무엇을 했나요?\n{self.yesterday_input.value}\n\n"
                 f"🫣 오늘 무엇을 할 계획인가요?\n{self.today_input.value}\n\n"
-                f"😉 하고 싶은 말\n{self.comment_input.value}"
+                f"😉 하고 싶은 말\n{self.comment_input.value}\n\n"
             )
 
             # 디스코드에 메시지 전송
@@ -103,9 +131,10 @@ class ScrumModal(ui.Modal, title="✍️ 인증 내용 작성"):
 
 
 class ScrumEditModal(ui.Modal, title="✏️ 인증 내용 수정"):
-    def __init__(self, message_to_edit: discord.Message, yesterday: str, today: str, comment: str):
+    def __init__(self, message_to_edit: discord.Message, yesterday: str, today: str, comment: str, user_id: int):
         super().__init__()
         self.message_to_edit = message_to_edit
+        self.user_id = user_id
 
         self.yesterday_input: ui.TextInput = ui.TextInput(
             label="🧐 어제 무엇을 했나요?",
@@ -216,8 +245,51 @@ class ScrumCog(commands.Cog, name="Scrum"):
                 else ""
             )
 
-            modal = ScrumModal(channel_id=channel_id, yesterday=today_section or "(없음)", today="")
-            await interaction.response.send_modal(modal)
+            # 사용자 프로필 조회 
+            user_profile = await get_user_profile(user_id)
+            
+            # 루틴이 있으면 오늘 계획에 자동으로 설정
+            routine = user_profile.get('routine', '') if user_profile else ''
+            today_plan = routine if routine else today_section or ""
+
+            # 목표 정보가 있으면 먼저 보여주기
+            if user_profile:
+                monthly_goal = user_profile.get('monthly_goal', '')
+                weekly_goal = user_profile.get('weekly_goal', '')
+                
+                if monthly_goal or weekly_goal:
+                    goals_info = f"🎯  {interaction.user.display_name}님의 목표\n\n"
+                    if monthly_goal:
+                        goals_info += f"📅  월간 목표\n\t{monthly_goal}\n\n"
+                    if weekly_goal:
+                        goals_info += f"📅  주간 목표\n\t{weekly_goal}\n\n"
+                    
+                    # 버튼과 함께 목표 정보 보여주기
+                    view = StartScrumButton(channel_id, user_id, today_section or "(없음)", today_plan)
+                    await interaction.response.send_message(
+                        f"{goals_info} 위 목표를 참고하여 인증을 작성해주세요\n", 
+                        view=view,
+                        ephemeral=True
+                    )
+
+                else:
+                    # 목표가 없는 경우: response 사용
+                    modal = ScrumModal(
+                        channel_id=channel_id, 
+                        user_id=user_id,
+                        yesterday=today_section or "(없음)", 
+                        today=today_plan, 
+                    )
+                    await interaction.response.send_modal(modal)
+            else:
+                # 프로필이 없는 경우: response 사용
+                modal = ScrumModal(
+                    channel_id=channel_id, 
+                    user_id=user_id,
+                    yesterday=today_section or "(없음)", 
+                    today=today_plan, 
+                )
+                await interaction.response.send_modal(modal)
         except Exception as e:
             logger.error(f"Error in copy_scrum command: {e}")
             if not interaction.response.is_done():
@@ -281,11 +353,15 @@ class ScrumCog(commands.Cog, name="Scrum"):
                 latest_msg.content, "😉 하고 싶은 말", ""
             )
 
+            # 사용자 프로필 조회
+            user_profile = await get_user_profile(user_id)
+
             modal = ScrumEditModal(
                 message_to_edit=latest_msg,
                 yesterday=yesterday_section or "",
                 today=today_section or "",
                 comment=comment_section or "",
+                user_id=user_id,
             )
             await interaction.response.send_modal(modal)
 
