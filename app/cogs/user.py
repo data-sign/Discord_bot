@@ -86,6 +86,7 @@ class RoutineSetModal(ui.Modal, title="🎯 루틴 설정"):
 <<<<<<< HEAD
 =======
 
+<<<<<<< HEAD
 # 줄바꿈을 처리하는 함수
 def format_goal_text(text: str) -> str:
     if not text or text == '없음':
@@ -95,6 +96,8 @@ def format_goal_text(text: str) -> str:
 
 >>>>>>> a2145a3 (feat: Add scrum and user commands with goal display)
 
+=======
+>>>>>>> b5fce8e (feat: Add scrum and user commands with goal display)
 class UserCog(commands.Cog, name="User"):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
