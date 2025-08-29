@@ -26,12 +26,13 @@ def extract_section(text: str, start_heading: str, end_heading: str) -> str:
     return "\n".join(collected).strip()
 
 class StartScrumButton(ui.View):
-    def __init__(self, channel_id: int, user_id: int, yesterday: str, today: str):
+    def __init__(self, channel_id: int, user_id: int, yesterday: str, today: str, has_goals: bool = False):
         super().__init__(timeout=300)  # 5분 타임아웃
         self.channel_id = channel_id
         self.user_id = user_id
         self.yesterday = yesterday
         self.today = today
+        self.has_goals = has_goals
 
     @ui.button(label="인증 작성 시작", style=discord.ButtonStyle.primary, emoji="✍️")
     async def start_scrum(self, interaction: Interaction, button: ui.Button):
@@ -253,43 +254,28 @@ class ScrumCog(commands.Cog, name="Scrum"):
             today_plan = routine if routine else today_section or ""
 
             # 목표 정보가 있으면 먼저 보여주기
-            if user_profile:
-                monthly_goal = user_profile.get('monthly_goal', '')
-                weekly_goal = user_profile.get('weekly_goal', '')
-                
-                if monthly_goal or weekly_goal:
-                    goals_info = f"🎯  {interaction.user.display_name}님의 목표\n\n"
-                    if monthly_goal:
-                        goals_info += f"📅  월간 목표\n\t{monthly_goal}\n\n"
-                    if weekly_goal:
-                        goals_info += f"📅  주간 목표\n\t{weekly_goal}\n\n"
-                    
-                    # 버튼과 함께 목표 정보 보여주기
-                    view = StartScrumButton(channel_id, user_id, today_section or "(없음)", today_plan)
-                    await interaction.response.send_message(
-                        f"{goals_info} 위 목표를 참고하여 인증을 작성해주세요\n", 
-                        view=view,
-                        ephemeral=True
-                    )
+            has_goals = user_profile.get('monthly_goal') ㅋ
 
-                else:
-                    # 목표가 없는 경우: response 사용
-                    modal = ScrumModal(
-                        channel_id=channel_id, 
-                        user_id=user_id,
-                        yesterday=today_section or "(없음)", 
-                        today=today_plan, 
-                    )
-                    await interaction.response.send_modal(modal)
-            else:
-                # 프로필이 없는 경우: response 사용
-                modal = ScrumModal(
-                    channel_id=channel_id, 
-                    user_id=user_id,
-                    yesterday=today_section or "(없음)", 
-                    today=today_plan, 
+            if has_goals:
+                # 목표가 있는 경우: 버튼 사용
+                view = StartScrumButton(channel_id, user_id, today_section or "(없음)", today_plan, has_goals=True)
+                await interaction.response.send_message(
+                    f"🎯  {interaction.user.display_name}님의 목표\n\n"
+                    f"📅  월간 목표\n{user_profile.get('monthly_goal', '(없음)')}\n\n"
+                    f"📅  주간 목표\n{user_profile.get('weekly_goal', '(없음)')}\n\n"
+                    "위 목표를 참고하여 인증을 작성해주세요\n", 
+                    view=view,
+                    ephemeral=True
                 )
-                await interaction.response.send_modal(modal)
+            else:
+                # 목표가 없는 경우: 버튼 비활성화
+                # view = StartScrumButton(channel_id, user_id, today_section or "(없음)", today_plan, has_goals=False)
+                await interaction.response.send_message(
+                    "❌ 월간 목표를 먼저 설정해주세요.\n\n"
+                    "목표를 설정하려면 `/월간목표설정` 명령어를 사용해주세요.",
+                    # view=view,
+                    ephemeral=True
+                )
         except Exception as e:
             logger.error(f"Error in copy_scrum command: {e}")
             if not interaction.response.is_done():
