@@ -83,21 +83,7 @@ class RoutineSetModal(ui.Modal, title="🎯 루틴 설정"):
                 f"❌ 루틴 설정에 실패했습니다. 관리자에게 문의해주세요.", ephemeral=True
             )
 
-<<<<<<< HEAD
-=======
 
-<<<<<<< HEAD
-# 줄바꿈을 처리하는 함수
-def format_goal_text(text: str) -> str:
-    if not text or text == '없음':
-        return text
-    # 줄바꿈을 들여쓰기로 변환
-    return text.replace('\n-', '-')
-
->>>>>>> a2145a3 (feat: Add scrum and user commands with goal display)
-
-=======
->>>>>>> b5fce8e (feat: Add scrum and user commands with goal display)
 class UserCog(commands.Cog, name="User"):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
