@@ -254,7 +254,7 @@ class ScrumCog(commands.Cog, name="Scrum"):
             today_plan = routine if routine else today_section or ""
 
             # 목표 정보가 있으면 먼저 보여주기
-            has_goals = user_profile.get('monthly_goal') ㅋ
+            has_goals = user_profile.get('monthly_goal')
 
             if has_goals:
                 # 목표가 있는 경우: 버튼 사용
